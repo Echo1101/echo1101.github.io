@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>炫酷画廊</title>
+	<style>
+		*{margin:0;padding: 0;}
+		body{
+			background-color: #fff;
+			color: #555;
+			font-family: "微软雅黑";
+			font-size: 14px;
+			font-smothing:antialiased;
+			-webkit-font-smothing:antialiased;
+		}
+		.warp{
+			width: 100%;
+			height: 600px;
+			position: absolute;
+			top: 50%;
+			margin-top: -300px;
+			background-color: #ccc;
+			overflow: hidden;
+			perspective:800px;
+			-webkit-perspective:800px;
+		}
+		.photo{
+			width: 260px;
+			height: 320px;
+			position: absolute;
+			z-index: 1;
+			box-shadow:0 0 1px rgba(0,0,0,0.01);
+			transition:all .6s;
+			-webkit-transition:all 2s;
+		}
+		.photo .side{
+			width: 100%;
+			height: 100%;
+			background-color: #eee;
+			position: absolute;
+			top: 0;
+			right: 0;
+			padding: 20px;
+			box-sizing:border-box;
+		}
+		.photo .side-front{}
+		.photo .side-front .image{
+			width: 100%;
+			height: 250px;
+			line-height: 250px;
+			overflow: hidden;
+		}
+		.photo .side-front .image img{
+			width: 100%;
+		}
+		.photo .side-front .caption{
+			text-align: center;
+			font-size: 16px;
+			line-height: 50px;
+		}
+		.photo .side-back{
+			
+		}
+		.photo .side-back .desc{
+			color: #666;
+			font-size: 14px;
+			line-height: 1.5em;
+		}
+		/*当前选中海报*/
+		.photo_center{
+			left: 50%;
+			top: 50%;
+			margin:-160px 0 0 -130px;
+			z-index: 999;
+		}
+		/*负责3d效果*/
+		.photo-wrap{
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			transform-style:preserve-3d;
+			-webkit-transform-style:preserve-3d;
+			transition: all 2s;
+			-moz-transition: all 2s;	/* Firefox 4 */
+			-webkit-transition: all 2s;	/* Safari 和 Chrome */
+			-o-transition: all 2s;	
+		}
+		.photo-wrap .side-front{
+			transform: rotateY(0deg);
+			-webkit-transform: rotateY(0deg);	/* Safari 和 Chrome */
+			-moz-transform: rotateY(0deg);	/* Firefox */
+		}
+		.photo-wrap .side-back{
+			transform: rotateY(180deg);
+			-webkit-transform: rotateY(180deg);	/* Safari 和 Chrome */
+			-moz-transform: rotateY(180deg);	/* Firefox */
+		}
+		.photo-wrap .side{
+			backface-visibility:hidden;
+			-webkit-backface-visibility:hidden;
+		}
+
+
+		/*前面时不旋转*/
+		.photo_front .photo-wrap{
+			transform: rotateY(0deg);
+			-webkit-transform: rotateY(0deg);	/* Safari 和 Chrome */
+			-moz-transform: rotateY(0deg);	/* Firefox */
+		}
+		/*背面时旋转180度*/
+		.photo_back .photo-wrap{
+			transform: rotateY(180deg);
+			-webkit-transform: rotateY(180deg);	/* Safari 和 Chrome */
+			-moz-transform: rotateY(180deg);	/* Firefox */
+		}
+
+		/*控制条样式*/
+		.nav{
+			width: 80%;
+			height: 30px;
+			line-height: 30px;
+			position: absolute;
+			left: 10%;
+			bottom: 20px;
+			z-index: 999;
+			text-align: center;
+		}
+		.nav .i{
+			width: 30px;
+			height: 30px;
+			display: inline-block;
+			cursor: pointer;
+			background-color: #607D8B;
+			border-radius: 50%;
+			transform:scale(.48);
+			-webkit-transform:scale(.48);
+			transition:all .5s;
+			-webkit-transition:all .5s;
+		}
+		.nav .i:after{
+			content: "";
+			font-size: 100%;
+			display: inline-block;
+			line-height: 30px;
+			text-align: center;
+			color: #fff;
+			opacity: 0;
+		}
+		.nav .i_current{
+			transform:scale(1);
+			-webkit-transform:scale(1);
+			background-color: #808080;
+		}
+		.nav .i_current:after{
+			content: "\e70d";
+			font-size: 100%;
+			opacity: 1;
+			text-align: center;
+		}
+		.nav .i_back{
+			transform:scale(1);
+			-webkit-transform:scale(1);
+			transform:rotateY(180deg);
+		}
+
+		/*样式优化*/
+		.photo{
+			left: 50%;
+			top: 50%;
+			margin: -160px 0 0 -130px;
+		}/*能够解决切换时原来中间图片的闪动消失问题*/
+
+		.photo-wrap{
+			transform-origin:0% 50%;
+			-webkit-transform-origin:0% 50%;
+			-moz-transform-origin:0% 50%;
+		}
+		.photo_front .photo-wrap{
+			transform:translate(0px,0px) rotateY(0deg);
+			-webkit-transform:translate(0px,0px) rotateY(0deg);
+			-moz-transform:translate(0px,0px) rotateY(0deg);
+		}
+		.photo_back .photo-wrap{
+			transform:translate(260px,0px) rotateY(180deg);
+			-webkit-transform:translate(260px,0px) rotateY(180deg);
+			-moz-transform:translate(260px,0px) rotateY(180deg);
+		}
+
+		@font-face {font-family: "iconfont";
+		  src: url('iconfont.eot?t=1474165601'); /* IE9*/
+		  src: url('iconfont.eot?t=1474165601#iefix') format('embedded-opentype'), /* IE6-IE8 */
+		  url('iconfont.woff?t=1474165601') format('woff'), /* chrome, firefox */
+		  url('iconfont.ttf?t=1474165601') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
+		  url('iconfont.svg?t=1474165601#iconfont') format('svg'); /* iOS 4.1- */
+		}
+
+		.iconfont {
+		  font-family:"iconfont" !important;
+		  font-size:16px;
+		  font-style:normal;
+		  -webkit-font-smoothing: antialiased;
+		  -webkit-text-stroke-width: 0.2px;
+		  -moz-osx-font-smoothing: grayscale;
+		}
+		.icon-zhuanzhuanzhuan:before { content: "\e70d"; }
+	</style>
+</head>
+<body>
+	<!-- 2、改写视图，为模版字符串 -->
+	<div class="warp" id="wrap">
+		<!-- photo负责平移和旋转 -->
+		<div class="photo photo_front" onclick="turn(this);" id="photo_{{index}}">
+			<!-- photo-wrap负责3d旋转 -->
+			<div class="photo-wrap">
+				<div class="side side-front">
+					<p class="image">
+						<img src="20images/{{img}}">
+					</p>
+					<p class="caption">{{caption}}</p>
+				</div>
+				<div class="side side-back">
+					<p class="desc">{{desc}}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<script src="./20images/data.js"></script>
+	<script>
+		//1.页面的翻转
+		function turn (elem){
+			var cls = elem.className;
+			var n = elem.id.split('_')[1];
+
+			if (!/photo_center/.test(cls)) {
+				return rsort(n);
+			};
+
+			if (/photo_front/.test(cls)) {
+				cls = cls.replace(/photo_front/,'photo_back');
+				g('#nav_'+n).className += ' i_back';
+			} 
+			else{
+				cls = cls.replace(/photo_back/,'photo_front');
+				g('#nav_'+n).className = g('#nav_'+n).className.replace(/i_back/,'');
+			}
+
+			return elem.className = cls;
+		}
+
+		//3.通用函数
+		function g (selector) {			
+			var method = selector.substr(0,1)=='.'?'getElementsByClassName':'getElementById';//substr(0,1),第0个元素开始的第一个字符
+			return document[method](selector.substr(1));//substr(1),第1个元素开始的所有字符
+		}
+		
+		//随机生成一个值（有规定的范围）random({min,max})
+		function random (rang) {
+			var max = Math.max(rang[0],rang[1]);
+			var min = Math.min(rang[0],rang[1]);
+
+			var diff = max-min;//10-0=10,生成的数应该在1和10之间
+
+			var number = Math.ceil(Math.random()*diff+min);//math.random()返回0到1的小数，然后0.6*10+0取整
+
+			return number;
+		}
+
+		//4.输出所有图片
+		var data = data;
+		function addPhoto () {
+			var template = g('#wrap').innerHTML;//div#wrap之内的所有字符串
+			var nav = [];
+			var html = [];
+			for(var s=0;s<data.length;s++){
+
+				var _html = template
+				.replace('{{index}}',(s+1))//data[0] -> 1.jpg -> id=photo_1
+				.replace('{{img}}',data[s].img)//1.jpg
+				.replace('{{caption}}',data[s].caption)//第1张
+				.replace('{{desc}}',data[s].desc);//第1张
+				html.push(_html);
+
+				nav.push('<span class="i" id="nav_'+(s+1)+'" onclick="turn(g(\'#photo_'+(s+1)+'\'))"></span>');
+			}
+			html.push('<div class="nav">'+nav.join('')+'</div>');
+			g('#wrap').innerHTML = html.join('');//此时写入了10个到模版	
+
+			//其中随机的一张放置在中间
+			rsort(random([0,data.length]));//产生x大于0，小于等于10	
+			//rsort(0);
+		}
+
+		addPhoto ();
+
+		//5.海报排序
+		function rsort(n){
+			//先把所有的图片都清除photo_center
+			var _photo = g('.photo');
+			var photos = [];//为了放清除photo_center,photo_fornt,photo_back的元素
+			for (var i = 0; i < _photo.length; i++) {
+				//清除中间，正反样式，以及left top  以及旋转
+				_photo[i].className = _photo[i].className.replace(/\s*photo_center\s*/,' ');
+				_photo[i].className = _photo[i].className.replace(/\s*photo_front\s*/,' ');
+				_photo[i].className = _photo[i].className.replace(/\s*photo_back\s*/,' ');
+
+				_photo[i].style.left = '';
+				_photo[i].style.top = '';
+				_photo[i].style['transform'] = _photo[i].style['-webkit-transform'] = 'rotate(360deg) scale(1.3)';
+
+				_photo[i].className += ' photo_front';
+				photos.push(_photo[i]);
+			};
+
+			//中间区域
+			var photo_center = g('#photo_'+n);
+			photo_center.className += ' photo_center';
+			photo_center = photos.splice((n-1),1)[0];//[0]~[photos.length-1]
+
+			console.log(photos.length);
+
+			//把海报分为左右两部分
+
+			var photos_left = photos.splice(0,Math.ceil(photos.length/2));
+			var photos_right = photos;
+
+			var ranges = range();
+			for (var i = 0; i < photos_left.length; i++) {
+				var photo = photos_left[i];
+				photo.style.left = random(ranges.left.x)+'px';
+				photo.style.top = random(ranges.left.y)+'px';
+				photo.style['transform'] = photo.style['-webkit-transform'] = 'rotate('+random([-150,150])+'deg) scale(1)';
+			};
+			for (var i = 0; i < photos_right.length; i++) {
+				var photo = photos_right[i];
+				photo.style.left = random(ranges.right.x)+'px';
+				photo.style.top = random(ranges.right.y)+'px';
+				photo.style['transform'] = photo.style['-webkit-transform'] = 'rotate('+random([-150,150])+'deg) scale(1)';
+			};
+
+			//控制条
+			var navs=g('.i');
+			for (var i = 0; i < navs.length; i++) {
+				navs[i].className = navs[i].className.replace(/\s*i_current iconfont\s*/,'');
+				navs[i].className = navs[i].className.replace(/\s*i_back\s*/,'');
+			};
+
+			g('#nav_'+n).className += " i_current iconfont";
+		}
+
+		//6.计算左右分区的范围{left:{x:[]  y[]} , right:{x:[]  y[]}}
+		function range () {
+			var range = { left:{x:[] , y:[]} , right:{x:[] , y:[]}};
+			var wrap = {
+				w: g('#wrap').clientWidth,
+				h: g('#wrap').clientHeight
+			};
+
+			var photo = {
+				w: g('.photo')[0].clientWidth,
+				h: g('.photo')[ 0].clientHeight
+			};
+
+			range.wrap = wrap;
+			range.photo = photo;
+
+			range.left.x = [0-photo.h,wrap.w/2-photo.h];
+			range.left.y = [0-photo.h/2,wrap.h-photo.h/2]
+
+			range.right.x = [wrap.w/2+photo.h,wrap.w-photo.h];
+			range.right.y = [0-photo.h/2,wrap.h-photo.h/2]
+
+			return range;
+		}
+
+	</script>
+</body>
+</html>
